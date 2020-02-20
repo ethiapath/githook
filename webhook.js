@@ -1,42 +1,31 @@
-const secret = "SECRET";
-const repo = ~/cxui-framework/;
+const secret = "secret";
+const repo = "~/cxui-framework/"; // Update this path to the repo path on remote
 
-const fs = require('fs');
 const http = require('http');
 const crypto = require('crypto');
 const exec = require('child_process').exec;
 
-function getTime () {
-          const date = new Date;
-          return date.getHours() + ':' + date.getMinutes().toString().padStart(2, '0');
+function getTime() {
+      const date = new Date;
+      return date.getHours() + ':' + date.getMinutes().toString().padStart(2, '0');
 }
 
-// var logFile = fs.createWriteStream('/tmp/githook.log', {flags: 'a'});
+let STAGE = 'Webhook'
+const print = (msg) => `${STAGE} ${getTime()} msg`;
 
-// process.stdout.write = process.stderr.write = logFile.write.bind(logFile);
-
-/*
-process.on('uncaughtException', function(err) {
-  console.error((err && err.stack) ? err.stack : err);
-});
-*/
-
-console.log('[Webhook] ' + getTime() + ' Starting server')
+print('Starting server')
 http.createServer(function (req, res) {
-            req.on('data', function(chunk) {
-                            let sig = sha1= + crypto.createHmac('sha1', secret).update(chunk.toString()).digest('hex');
+      req.on('data', function (chunk) {
+                let sig = "sha1=" + crypto.createHmac('sha1', secret).update(chunk.toString()).digest('hex');
 
-                            console.log('[Webhook] ' + getTime() + ' Got request');
-                            console.log('[Webhook] ' + getTime() + ' Date: ' + chunk);
-                            if (req.headers['x-hub-signature'] == sig) {
-                                                console.log('[Webhook] ' + getTime() + '  Running script')
-                                                let buildScript = exec('cd ' + repo + ' && ./scripts/build-on-remote.sh');
-                                                // buildScript.stdout.pipe(logFile);
-                                                // buildScript.stderr.pipe(logFile);
-                                                console.log('[Webhook] ' + getTime() + '  Script completed!')
-                                            }
-                        });
+                print('Got request');
+                print('Data: ' + chunk);
+                if (req.headers['x-hub-signature'] == sig) {
+                              print('Running script')
+                              exec(`cd ${repo}/scripts && ./build-on-remote.sh`);
+                          }
+            });
 
-            res.end();
+      res.end();
 }).listen(8080);
 
