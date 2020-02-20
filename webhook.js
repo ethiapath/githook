@@ -1,4 +1,34 @@
-const secret = "secret";
+/*
+ * Steps to install webhook (from https://www.digitalocean.com/community/tutorials/how-to-use-node-js-and-github-webhooks-to-keep-remote-projects-in-sync)
+ * 0. Add webhook on github pointing to server url
+ * 1. Paste unique secret into github hook and this file
+ * 2. Create this file at `/etc/systemd/system/webhook.service`
+ * ```
+ * [Unit]
+ * Description=Github webhook
+ * After=network.target
+ *
+ * [Service]
+ * Environment=NODE_PORT=8080
+ * Type=simple
+ * User=sammy
+ * ExecStart=/usr/bin/nodejs /path/to/webhook.js
+ * Restart=on-failure
+ *
+ * [Install]
+ * WantedBy=multi-user.target
+ * ```
+ * 3. Enable the webhook service: `systemctl enable webhook.service`
+ * 4. Start the service: `systemctl start webhook`
+ * 5. Check status with: `systemctl status webhook`
+ * 6. Redeliver the webhook payload on github to test
+ * 7. Success!
+ *
+ * If this webhook service keeps failing try moving `webhook.js` outside the repository directory
+ * and update the path in `/etc/systemd/system/webhook.service`.
+ * */
+
+const secret = "SECRET_STRING";
 const repo = "~/cxui-framework/"; // Update this path to the repo path on remote
 
 const http = require('http');
@@ -11,7 +41,7 @@ function getTime() {
 }
 
 let STAGE = 'Webhook'
-const print = (msg) => `${STAGE} ${getTime()} msg`;
+const print = (msg) => { console.log(`${STAGE} ${getTime()} ${msg}`); }
 
 print('Starting server')
 http.createServer(function (req, res) {
